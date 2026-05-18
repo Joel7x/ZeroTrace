@@ -1,0 +1,968 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #111827;
+    --bg3: #1a2236;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.15);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.12);
+    --teal: #14b8a6;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  .app { display:flex; flex-direction:column; min-height:100vh; }
+
+  /* Header */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border2);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    gap: 16px;
+    position: sticky; top:0; z-index:100;
+  }
+  .logo {
+    display:flex; align-items:center; gap:8px;
+    font-family: var(--mono); font-size:13px; font-weight:600;
+    letter-spacing:0.5px;
+  }
+  .logo-icon {
+    width:28px; height:28px; border-radius:6px;
+    background: linear-gradient(135deg,#ef4444,#f59e0b);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .live-pill {
+    display:flex; align-items:center; gap:5px;
+    background: rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);
+    border-radius:20px; padding:2px 10px; font-size:11px; color: var(--green);
+    font-family: var(--mono); margin-left:auto;
+  }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Nav tabs */
+  .nav {
+    display:flex; gap:2px; padding:0 24px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-tab {
+    padding:10px 16px; cursor:pointer; font-size:12px; font-weight:500;
+    color: var(--muted); border-bottom:2px solid transparent;
+    transition: all 0.15s; letter-spacing:0.3px;
+    background:none; border-left:none; border-right:none; border-top:none;
+    font-family: var(--sans);
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  /* Main content */
+  .content { padding:20px 24px; flex:1; }
+
+  /* Stat cards */
+  .stats { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat {
+    background: var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:14px 16px;
+  }
+  .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+  .stat-value { font-family:var(--mono); font-size:22px; font-weight:600; }
+  .stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+  .stat-sub .up { color: var(--red); }
+  .stat-sub .down { color: var(--green); }
+
+  /* Claims table */
+  .panel {
+    background: var(--bg2); border:1px solid var(--border);
+    border-radius:8px; overflow:hidden;
+  }
+  .panel-header {
+    padding:14px 16px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .panel-title { font-size:12px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); }
+  .panel-action {
+    font-size:11px; color:var(--amber); cursor:pointer; font-family:var(--mono);
+    background:none; border:none; padding:0;
+  }
+
+  table { width:100%; border-collapse:collapse; }
+  th {
+    padding:9px 14px; text-align:left; font-size:10px; font-weight:600;
+    color:var(--muted); text-transform:uppercase; letter-spacing:0.8px;
+    border-bottom:1px solid var(--border);
+  }
+  td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .mono { font-family:var(--mono); }
+
+  /* Risk badge */
+  .risk {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 8px; border-radius:4px; font-family:var(--mono); font-size:11px; font-weight:600;
+  }
+  .risk-high { background:var(--red-dim); color:var(--red); border:1px solid rgba(239,68,68,0.25); }
+  .risk-med  { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,158,11,0.25); }
+  .risk-low  { background:var(--green-dim); color:var(--green); border:1px solid rgba(16,185,129,0.25); }
+
+  /* Score bar */
+  .score-bar { width:80px; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; display:inline-block; vertical-align:middle; }
+  .score-fill { height:100%; border-radius:2px; }
+
+  /* Status */
+  .status { display:inline-flex; align-items:center; gap:5px; font-size:11px; }
+  .status-dot { width:5px; height:5px; border-radius:50%; }
+
+  /* Two-column layout */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+  /* Feature cards */
+  .feature {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:16px;
+    transition: border-color 0.2s;
+  }
+  .feature:hover { border-color: var(--border2); }
+  .feature-icon {
+    width:32px; height:32px; border-radius:6px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .feature-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .feature-desc { font-size:11px; color:var(--muted); line-height:1.6; }
+  .tag {
+    display:inline-block; padding:2px 7px; border-radius:3px;
+    font-size:10px; font-family:var(--mono); margin-top:8px;
+  }
+  .tag-ai { background:rgba(139,92,246,0.15); color:#a78bfa; }
+  .tag-rt { background:rgba(59,130,246,0.15); color:#60a5fa; }
+  .tag-core { background:rgba(16,185,129,0.12); color:#34d399; }
+
+  /* Roadmap */
+  .roadmap { display:flex; flex-direction:column; gap:0; }
+  .phase {
+    display:grid; grid-template-columns: 140px 1fr;
+    border-left:2px solid var(--border2); padding-left:0;
+    position:relative;
+  }
+  .phase-label {
+    padding:16px 20px 16px 0;
+    font-family:var(--mono); font-size:11px; font-weight:600;
+    color:var(--muted); text-align:right;
+    border-right:2px solid var(--border2);
+    position:relative;
+  }
+  .phase-label::after {
+    content:''; position:absolute; right:-6px; top:22px;
+    width:10px; height:10px; border-radius:50%;
+    background:var(--bg); border:2px solid var(--amber);
+  }
+  .phase-tasks { padding:16px 0 16px 24px; display:flex; flex-direction:column; gap:8px; }
+  .task {
+    display:flex; align-items:flex-start; gap:10px;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:6px; padding:10px 12px;
+  }
+  .task-check { width:16px; height:16px; border-radius:3px; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:10px; }
+  .done { background: rgba(16,185,129,0.2); color:var(--green); border:1px solid rgba(16,185,129,0.3); }
+  .build { background: rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3); }
+  .todo { background: rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }
+  .task-title { font-size:12px; font-weight:500; }
+  .task-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* Reasoning panel */
+  .reasoning-chain { display:flex; flex-direction:column; gap:0; }
+  .reason-step {
+    display:grid; grid-template-columns: 36px 1fr;
+    gap:12px; position:relative;
+  }
+  .reason-step::before {
+    content:''; position:absolute; left:17px; top:36px; bottom:0;
+    width:1px; background:var(--border2);
+  }
+  .reason-step:last-child::before { display:none; }
+  .reason-num {
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:12px; font-weight:600;
+  }
+  .reason-body { padding:6px 0 20px; }
+  .reason-title { font-size:12px; font-weight:600; margin-bottom:3px; }
+  .reason-detail { font-size:11px; color:var(--muted); line-height:1.6; }
+  .reason-evidence {
+    display:inline-block; margin-top:6px; padding:4px 10px;
+    background:var(--bg3); border:1px solid var(--border2);
+    border-radius:4px; font-family:var(--mono); font-size:10px; color:var(--amber);
+  }
+
+  .arch-item {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 0; border-bottom:1px solid var(--border);
+  }
+  .arch-item:last-child { border-bottom:none; }
+  .arch-layer { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); width:100px; flex-shrink:0; }
+  .arch-stack { display:flex; flex-wrap:wrap; gap:6px; }
+  .tech-pill {
+    padding:3px 9px; border-radius:4px; font-size:11px; font-family:var(--mono);
+    background:var(--bg3); border:1px solid var(--border2); color:var(--text);
+  }
+
+  .claim-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .detail-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; }
+  .detail-row:last-child { border-bottom:none; }
+  .detail-key { color:var(--muted); }
+  .detail-val { font-family:var(--mono); }
+
+  .big-score {
+    text-align:center; padding:24px;
+  }
+  .big-score-num {
+    font-family:var(--mono); font-size:56px; font-weight:600; line-height:1;
+  }
+  .score-ring {
+    width:100px; height:100px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 12px;
+    background: conic-gradient(var(--red) 0% 87%, rgba(255,255,255,0.08) 87%);
+    position:relative;
+  }
+  .score-ring-inner {
+    width:76px; height:76px; border-radius:50%; background:var(--bg2);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+
+  /* Minibar chart */
+  .minichart { display:flex; align-items:flex-end; gap:3px; height:40px; margin-top:8px; }
+  .minichart-bar { flex:1; border-radius:2px 2px 0 0; background:rgba(59,130,246,0.4); transition:background 0.2s; }
+  .minichart-bar.hot { background:rgba(239,68,68,0.6); }
+  .minichart-bar.med { background:rgba(245,158,11,0.5); }
+
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .scrollable { max-height:320px; overflow-y:auto; }
+  .scrollable::-webkit-scrollbar { width:3px; }
+  .scrollable::-webkit-scrollbar-track { background:transparent; }
+  .scrollable::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+  .badge { padding:2px 7px; border-radius:3px; font-size:10px; }
+  .badge-new { background:rgba(59,130,246,0.15); color:#60a5fa; }
+  .badge-win { background:rgba(245,158,11,0.15); color:var(--amber); font-family:var(--mono); }
+
+  .claim-row { cursor:pointer; transition:background 0.1s; }
+  .claim-row:hover td { background:rgba(255,255,255,0.03); }
+  .claim-row.selected td { background:rgba(245,158,11,0.05) !important; }
+
+  .separator { width:100%; height:1px; background:var(--border); margin:16px 0; }
+
+  /* Animate in */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .panel, .stat, .feature, .task { animation: fadeUp 0.3s ease both; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🔍</div>
+    CLAIMGUARD&nbsp;<span style="color:var(--muted);font-weight:400">AI</span>
+  </div>
+  <span style="color:var(--border2);font-size:18px;">|</span>
+  <span style="color:var(--muted);font-size:11px;font-family:var(--mono);">Healthcare Fraud Detection Platform</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+    <span class="badge badge-win">🏆 Hackathon Build</span>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="nav-tab" onclick="showTab('claim')">Claim Inspector</button>
+  <button class="nav-tab" onclick="showTab('features')">Features</button>
+  <button class="nav-tab" onclick="showTab('roadmap')">Build Roadmap</button>
+  <button class="nav-tab" onclick="showTab('arch')">Architecture</button>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="content page active" id="page-dashboard">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Claims Today</div>
+      <div class="stat-value" style="color:var(--text)" id="claimsToday">2,847</div>
+      <div class="stat-sub"><span class="up">↑ 12%</span> vs yesterday</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Flagged High Risk</div>
+      <div class="stat-value" style="color:var(--red)" id="flaggedCount">34</div>
+      <div class="stat-sub"><span class="up">↑ 3</span> in last hour</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Fraud Prevented</div>
+      <div class="stat-value" style="color:var(--green)">$1.2M</div>
+      <div class="stat-sub"><span class="down">saved</span> this month</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg Risk Score</div>
+      <div class="stat-value" style="color:var(--amber)">23.4</div>
+      <div class="stat-sub">across all claims</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Live Claims Feed</span>
+        <button class="panel-action" onclick="showTab('claim')">Inspect claim →</button>
+      </div>
+      <div class="scrollable">
+        <table>
+          <thead><tr>
+            <th>Claim ID</th><th>Provider</th><th>Amount</th><th>ICD-10</th><th>Risk</th><th>Score</th><th>Flags</th>
+          </tr></thead>
+          <tbody id="claimsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Risk Distribution</span></div>
+        <div style="padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--red);">High (>70)</span>
+            <span class="mono" style="font-size:11px;color:var(--red);">34 (1.2%)</span>
+          </div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:12px;">
+            <div style="width:1.2%;height:100%;background:var(--red);border-radius:3px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--amber);">Medium (40-70)</span>
+            <span class="mono" style="font-size:11px;color:var(--amber);">182 (6.4%)</span>
+          </div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:12px;">
+            <div style="width:6.4%;height:100%;background:var(--amber);border-radius:3px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--green);">Low (&lt;40)</span>
+            <span class="mono" style="font-size:11px;color:var(--green);">2,631 (92.4%)</span>
+          </div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+            <div style="width:92.4%;height:100%;background:var(--green);border-radius:3px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Top Fraud Patterns</span></div>
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;">Duplicate billing</span>
+            <span class="mono" style="font-size:11px;color:var(--red);">14</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;">Upcoding</span>
+            <span class="mono" style="font-size:11px;color:var(--red);">9</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;">Ghost patient</span>
+            <span class="mono" style="font-size:11px;color:var(--amber);">6</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;">Phantom service</span>
+            <span class="mono" style="font-size:11px;color:var(--amber);">5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Claims/hour</span></div>
+        <div style="padding:10px 16px 14px;">
+          <div class="minichart" id="minichart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLAIM INSPECTOR PAGE -->
+<div class="content page" id="page-claim">
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;">
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Risk Score</span></div>
+        <div class="big-score">
+          <div class="score-ring">
+            <div class="score-ring-inner">
+              <span style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--red);">87</span>
+              <span style="font-size:10px;color:var(--muted);">/ 100</span>
+            </div>
+          </div>
+          <div class="risk risk-high">⚠ HIGH RISK</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">Auto-escalated to investigator</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Claim Details</span></div>
+        <div style="padding:12px 16px;">
+          <div class="detail-row"><span class="detail-key">Claim ID</span><span class="detail-val" style="color:var(--amber)">CLM-2024-8841</span></div>
+          <div class="detail-row"><span class="detail-key">Provider</span><span class="detail-val">Dr. Martinez NPI</span></div>
+          <div class="detail-row"><span class="detail-key">Patient</span><span class="detail-val">MBR-**4421</span></div>
+          <div class="detail-row"><span class="detail-key">Service Date</span><span class="detail-val">2024-05-14</span></div>
+          <div class="detail-row"><span class="detail-key">Billed</span><span class="detail-val" style="color:var(--red)">$18,400</span></div>
+          <div class="detail-row"><span class="detail-key">CPT Code</span><span class="detail-val">99215</span></div>
+          <div class="detail-row"><span class="detail-key">ICD-10</span><span class="detail-val">Z00.00</span></div>
+          <div class="detail-row"><span class="detail-key">Payer</span><span class="detail-val">BlueCross ID</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Score Breakdown</span></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:9px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;">
+              <span>Billing anomaly</span><span class="mono" style="color:var(--red);">38/40</span>
+            </div>
+            <div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
+              <div style="width:95%;height:100%;background:var(--red);border-radius:2px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;">
+              <span>Provider pattern</span><span class="mono" style="color:var(--amber);">24/30</span>
+            </div>
+            <div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
+              <div style="width:80%;height:100%;background:var(--amber);border-radius:2px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;">
+              <span>Network anomaly</span><span class="mono" style="color:var(--amber);">18/20</span>
+            </div>
+            <div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
+              <div style="width:90%;height:100%;background:var(--amber);border-radius:2px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;">
+              <span>Temporal pattern</span><span class="mono" style="color:var(--green);">7/10</span>
+            </div>
+            <div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
+              <div style="width:70%;height:100%;background:var(--green);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">AI Reasoning Chain</span>
+          <span style="font-size:10px;color:var(--green);font-family:var(--mono);">✓ FULLY TRACEABLE</span>
+        </div>
+        <div style="padding:16px 20px;" class="scrollable">
+          <div class="reasoning-chain">
+
+            <div class="reason-step">
+              <div class="reason-num" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);">1</div>
+              <div class="reason-body">
+                <div class="reason-title">Extreme overbilling vs. procedure benchmark</div>
+                <div class="reason-detail">CPT 99215 (complex office visit) average reimbursement is $285–$340. This claim bills $18,400 — 54× the benchmark. Z00.00 is a routine wellness code; complex billing codes are inconsistent with this diagnosis.</div>
+                <div class="reason-evidence">avg_cpt_99215 = $312 · billed = $18,400 · ratio = 58.97×</div>
+              </div>
+            </div>
+
+            <div class="reason-step">
+              <div class="reason-num" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);">2</div>
+              <div class="reason-body">
+                <div class="reason-title">Provider billing velocity spike</div>
+                <div class="reason-detail">Dr. Martinez submitted 41 claims in the past 7 days — a 340% increase from their 90-day baseline of 9.6 claims/week. Sudden volume spikes are a strong indicator of billing scheme initiation.</div>
+                <div class="reason-evidence">baseline_weekly = 9.6 · this_week = 41 · spike_ratio = 4.27×</div>
+              </div>
+            </div>
+
+            <div class="reason-step">
+              <div class="reason-num" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);">3</div>
+              <div class="reason-body">
+                <div class="reason-title">Shared NPI cluster — provider network anomaly</div>
+                <div class="reason-detail">Graph analysis shows this provider shares billing addresses and NPI referral patterns with 3 other flagged providers (NPI: 1234567890, 9876543210, 5544332211). This network has collectively submitted 142 suspicious claims.</div>
+                <div class="reason-evidence">cluster_id = FRD-NET-077 · members = 4 · shared_addr = true</div>
+              </div>
+            </div>
+
+            <div class="reason-step">
+              <div class="reason-num" style="background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);">4</div>
+              <div class="reason-body">
+                <div class="reason-title">Temporal check — service date plausible</div>
+                <div class="reason-detail">Service date (2024-05-14) is a weekday within normal clinic hours. No temporal anomaly detected. Prior claim for same patient on 2024-05-13 was for a different provider — possible fragmented care, but not conclusive.</div>
+                <div class="reason-evidence">service_day = Tuesday · gap_prev_claim = 1 day · overlap = false</div>
+              </div>
+            </div>
+
+            <div class="reason-step">
+              <div class="reason-num" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);">5</div>
+              <div class="reason-body">
+                <div class="reason-title">Verdict — escalate for human review</div>
+                <div class="reason-detail">Composite score 87/100. Primary driver: extreme billing anomaly (×58 benchmark). Supporting signals: provider velocity spike and network cluster membership. Recommend hold on payment and manual audit. Estimated fraud probability: 89%.</div>
+                <div class="reason-evidence">action = HOLD_PAYMENT · investigator = auto-assigned · priority = P1</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Similar Historical Cases</span></div>
+        <div style="padding:12px 16px;">
+          <table style="font-size:11px;">
+            <thead><tr><th>Case ID</th><th>Score</th><th>Outcome</th><th>Recovered</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">CLM-2024-6120</td><td><span class="risk risk-high">91</span></td><td style="color:var(--red);">Confirmed fraud</td><td class="mono" style="color:var(--green);">$22,100</td></tr>
+              <tr><td class="mono">CLM-2024-3891</td><td><span class="risk risk-high">83</span></td><td style="color:var(--red);">Confirmed fraud</td><td class="mono" style="color:var(--green);">$17,400</td></tr>
+              <tr><td class="mono">CLM-2024-1122</td><td><span class="risk risk-med">71</span></td><td style="color:var(--amber);">Upcoding found</td><td class="mono" style="color:var(--green);">$9,800</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES PAGE -->
+<div class="content page" id="page-features">
+  <div style="margin-bottom:16px;">
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px;">Platform Features</div>
+    <div style="font-size:12px;color:var(--muted);">Every flag is explainable. Every decision is auditable.</div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:16px;">
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(239,68,68,0.15);">🎯</div>
+      <div class="feature-title">Multi-Layer Risk Scoring</div>
+      <div class="feature-desc">Composite 0–100 score across billing anomaly, provider pattern, network analysis, and temporal signals. Every sub-score is independently explained.</div>
+      <span class="tag tag-ai">AI-powered</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(59,130,246,0.15);">🧠</div>
+      <div class="feature-title">Traceable AI Reasoning</div>
+      <div class="feature-desc">Claude API generates step-by-step reasoning chains for every flagged claim. Investigators see exactly why a claim was flagged — no black box.</div>
+      <span class="tag tag-ai">Claude API</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(16,185,129,0.15);">📥</div>
+      <div class="feature-title">Universal Claims Ingestion</div>
+      <div class="feature-desc">Parses HL7 FHIR R4, EDI 837, CSV batch uploads, and REST API submissions. Auto-normalizes to internal schema with zero manual mapping.</div>
+      <span class="tag tag-core">Core</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(139,92,246,0.15);">🕸️</div>
+      <div class="feature-title">Provider Network Graph</div>
+      <div class="feature-desc">Neo4j-powered graph detects collusion rings, shared billing addresses, unusual referral clusters, and NPI relationship anomalies across thousands of providers.</div>
+      <span class="tag tag-ai">Graph ML</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.15);">⏱️</div>
+      <div class="feature-title">Temporal Pattern Engine</div>
+      <div class="feature-desc">Detects billing velocity spikes, impossible same-day service duplicates, weekend/holiday billing anomalies, and seasonal fraud patterns using time-series analysis.</div>
+      <span class="tag tag-rt">Real-time</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(20,184,166,0.15);">📊</div>
+      <div class="feature-title">CPT/ICD Benchmark Engine</div>
+      <div class="feature-desc">Compares every claim against CMS fee schedule benchmarks, specialty-specific billing norms, and geographic pricing variations. Flags statistical outliers automatically.</div>
+      <span class="tag tag-core">Core</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(59,130,246,0.15);">🔁</div>
+      <div class="feature-title">Duplicate Detection</div>
+      <div class="feature-desc">Fuzzy matching across patient ID, service date, CPT code, and provider NPI catches exact duplicates and near-duplicates (same service, different modifier).</div>
+      <span class="tag tag-core">Core</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(239,68,68,0.15);">🚨</div>
+      <div class="feature-title">Real-time Alerting</div>
+      <div class="feature-desc">Kafka-backed stream processing flags high-risk claims in &lt;500ms. Investigators get instant Slack/email alerts. Payment holds triggered automatically for P1 claims.</div>
+      <span class="tag tag-rt">Kafka</span>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(16,185,129,0.15);">📋</div>
+      <div class="feature-title">Case Management Workflow</div>
+      <div class="feature-desc">Built-in investigator workspace with case assignment, evidence annotation, outcome tracking, and full audit trail for regulatory compliance (HIPAA, OIG guidelines).</div>
+      <span class="tag tag-core">Core</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><span class="panel-title">Winning Differentiators</span></div>
+    <div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="padding:12px;background:var(--bg3);border-radius:6px;border:1px solid rgba(245,158,11,0.2);">
+        <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:4px;">🔍 Full Explainability</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;">Every flag has a numbered reasoning chain. Investigators don't just see a score — they see the evidence. Regulators love this.</div>
+      </div>
+      <div style="padding:12px;background:var(--bg3);border-radius:6px;border:1px solid rgba(59,130,246,0.2);">
+        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:4px;">📡 Real-time, not batch</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;">Most fraud detection runs overnight. ClaimGuard flags suspicious claims before payment clears — stopping fraud at the source.</div>
+      </div>
+      <div style="padding:12px;background:var(--bg3);border-radius:6px;border:1px solid rgba(16,185,129,0.2);">
+        <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px;">🕸️ Graph-based network analysis</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;">Rule-based systems miss collusion rings. Graph ML finds coordinated fraud that looks clean in isolation — a major market gap.</div>
+      </div>
+      <div style="padding:12px;background:var(--bg3);border-radius:6px;border:1px solid rgba(139,92,246,0.2);">
+        <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:4px;">🔌 Zero-integration design</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;">Reads existing claim formats (FHIR, EDI 837) without schema changes. Drop-in deployment with existing payer systems in days, not months.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP PAGE -->
+<div class="content page" id="page-roadmap">
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;">
+    <div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:4px;">Hackathon Build Plan</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Phased execution across 2 days. Ship a working demo that judges can interact with.</div>
+
+      <div class="roadmap">
+        <div class="phase">
+          <div class="phase-label">Day 1<br/>AM<br/><span style="color:var(--green);font-size:10px;">START HERE</span></div>
+          <div class="phase-tasks">
+            <div class="task">
+              <div class="task-check done">✓</div>
+              <div><div class="task-title">Project scaffold + DB schema</div><div class="task-desc">FastAPI backend · PostgreSQL (claims, providers, flags) · React frontend · Docker compose up</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check build">▶</div>
+              <div><div class="task-title">Claims ingestion API</div><div class="task-desc">POST /claims endpoint · CSV bulk upload · basic FHIR parser · seed 10K synthetic claims</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Rule engine (deterministic flags)</div><div class="task-desc">Duplicate detection · CPT benchmark lookup · impossible dates · billed > allowed threshold rules</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-label">Day 1<br/>PM</div>
+          <div class="phase-tasks">
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Risk scoring engine</div><div class="task-desc">Weighted composite scorer · sub-scores for billing/provider/temporal · store in claims table</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Claude API reasoning integration</div><div class="task-desc">Feed claim + flags to Claude claude-sonnet-4-20250514 · generate numbered reasoning chain · store as JSONB · display in UI</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Provider velocity analysis</div><div class="task-desc">Rolling 7/30/90 day claim counts · spike detection · flag if >3× baseline</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-label">Day 2<br/>AM</div>
+          <div class="phase-tasks">
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Dashboard + live claims table</div><div class="task-desc">React dashboard · WebSocket live feed · risk badges · stat cards · search + filter</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Claim Inspector view</div><div class="task-desc">Full claim detail · score breakdown bars · AI reasoning chain · similar cases · action buttons</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Provider network graph (basic)</div><div class="task-desc">D3 force graph of provider relationships · shared address clustering · visual cluster highlight</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-label">Day 2<br/>PM<br/><span style="color:var(--amber);font-size:10px;">DEMO PREP</span></div>
+          <div class="phase-tasks">
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Demo data storytelling</div><div class="task-desc">Curate 5 dramatic fraud scenarios · pre-seed DB · walkthrough script for judges · live submit demo</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">Polish + edge cases</div><div class="task-desc">Error states · loading skeletons · mobile responsive · HIPAA redaction on patient IDs</div></div>
+            </div>
+            <div class="task">
+              <div class="task-check todo">○</div>
+              <div><div class="task-title">ROI calculator for pitch</div><div class="task-desc">Slide: "1.2M claims/year × 3% fraud rate × $8K avg = $288M caught" · real industry stat overlay</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Tech Stack</span></div>
+        <div style="padding:12px 16px;">
+          <div class="arch-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+            <div class="arch-layer">Frontend</div>
+            <div class="arch-stack"><span class="tech-pill">React 18</span><span class="tech-pill">TypeScript</span><span class="tech-pill">TailwindCSS</span></div>
+          </div>
+          <div class="arch-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+            <div class="arch-layer">Backend</div>
+            <div class="arch-stack"><span class="tech-pill">FastAPI</span><span class="tech-pill">Python</span><span class="tech-pill">Pydantic</span></div>
+          </div>
+          <div class="arch-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+            <div class="arch-layer">Database</div>
+            <div class="arch-stack"><span class="tech-pill">PostgreSQL</span><span class="tech-pill">Redis</span></div>
+          </div>
+          <div class="arch-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+            <div class="arch-layer">AI / ML</div>
+            <div class="arch-stack"><span class="tech-pill" style="border-color:rgba(245,158,11,0.4);color:var(--amber);">Claude API</span><span class="tech-pill">scikit-learn</span></div>
+          </div>
+          <div class="arch-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+            <div class="arch-layer">Infra</div>
+            <div class="arch-stack"><span class="tech-pill">Docker</span><span class="tech-pill">WebSocket</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Judge Talking Points</span></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:11px;line-height:1.6;padding:8px;background:var(--bg3);border-radius:4px;border-left:2px solid var(--amber);">
+            "$300B lost to healthcare fraud annually in the US alone — every insurer needs this"
+          </div>
+          <div style="font-size:11px;line-height:1.6;padding:8px;background:var(--bg3);border-radius:4px;border-left:2px solid var(--blue);">
+            "Unlike black-box ML, every flag is explained — regulators and investigators trust it"
+          </div>
+          <div style="font-size:11px;line-height:1.6;padding:8px;background:var(--bg3);border-radius:4px;border-left:2px solid var(--green);">
+            "Real-time pre-payment detection, not post-payment audit — stops fraud before it clears"
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE PAGE -->
+<div class="content page" id="page-arch">
+  <div style="font-size:18px;font-weight:600;margin-bottom:4px;">System Architecture</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">End-to-end flow from claim submission to investigator action.</div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="panel-header"><span class="panel-title">Data Flow</span></div>
+    <div style="padding:20px 24px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">Claim Input<br/><span style="color:var(--muted);font-size:10px;">FHIR/EDI/CSV/API</span></div>
+        <div style="color:var(--amber);">→</div>
+        <div style="background:var(--bg3);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">Ingestion Layer<br/><span style="color:var(--muted);font-size:10px;">Normalize + validate</span></div>
+        <div style="color:var(--amber);">→</div>
+        <div style="background:var(--bg3);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">Rule Engine<br/><span style="color:var(--muted);font-size:10px;">40+ deterministic rules</span></div>
+        <div style="color:var(--amber);">→</div>
+        <div style="background:var(--bg3);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">ML Scoring<br/><span style="color:var(--muted);font-size:10px;">XGBoost anomaly</span></div>
+        <div style="color:var(--amber);">→</div>
+        <div style="background:var(--bg3);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">Claude Reasoning<br/><span style="color:var(--muted);font-size:10px;">Explanation chain</span></div>
+        <div style="color:var(--amber);">→</div>
+        <div style="background:var(--bg3);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:8px 14px;font-size:11px;font-family:var(--mono);">Dashboard + Alert<br/><span style="color:var(--muted);font-size:10px;">Investigator action</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Backend Services</span></div>
+      <div style="padding:12px 16px;">
+        <div class="arch-item">
+          <div class="arch-layer">API Gateway</div>
+          <div class="arch-stack"><span class="tech-pill">FastAPI</span><span class="tech-pill">OAuth2 JWT</span><span class="tech-pill">Rate limit</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Rule Engine</div>
+          <div class="arch-stack"><span class="tech-pill">Python</span><span class="tech-pill">Drools-style</span><span class="tech-pill">Config YAML</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">ML Service</div>
+          <div class="arch-stack"><span class="tech-pill">scikit-learn</span><span class="tech-pill">IsolationForest</span><span class="tech-pill">XGBoost</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">AI Reasoning</div>
+          <div class="arch-stack"><span class="tech-pill" style="color:var(--amber);border-color:rgba(245,158,11,0.4);">Claude Sonnet</span><span class="tech-pill">Structured prompt</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Graph Engine</div>
+          <div class="arch-stack"><span class="tech-pill">NetworkX</span><span class="tech-pill">Community detect</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Alerts</div>
+          <div class="arch-stack"><span class="tech-pill">WebSocket</span><span class="tech-pill">Webhook POST</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Data Layer</span></div>
+      <div style="padding:12px 16px;">
+        <div class="arch-item">
+          <div class="arch-layer">Claims DB</div>
+          <div class="arch-stack"><span class="tech-pill">PostgreSQL 16</span><span class="tech-pill">JSONB flags</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Cache</div>
+          <div class="arch-stack"><span class="tech-pill">Redis</span><span class="tech-pill">Provider stats</span><span class="tech-pill">TTL 1h</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Benchmarks</div>
+          <div class="arch-stack"><span class="tech-pill">CMS fee schedule</span><span class="tech-pill">CSV → Postgres</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Audit Log</div>
+          <div class="arch-stack"><span class="tech-pill">Append-only table</span><span class="tech-pill">HIPAA compliant</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Synthetic Data</div>
+          <div class="arch-stack"><span class="tech-pill">Faker + seeder</span><span class="tech-pill">10K claims</span><span class="tech-pill">5% fraud rate</span></div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-layer">Infra</div>
+          <div class="arch-stack"><span class="tech-pill">Docker Compose</span><span class="tech-pill">Nginx proxy</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-header"><span class="panel-title">Claude Reasoning Prompt Template</span></div>
+    <div style="padding:14px 16px;">
+      <pre style="font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--bg3);padding:14px;border-radius:6px;line-height:1.7;overflow-x:auto;">You are a healthcare fraud detection analyst. Analyze this claim and produce
+a numbered reasoning chain explaining every risk signal detected.
+
+CLAIM: {claim_json}
+DETECTED FLAGS: {flags_list}
+PROVIDER STATS: {provider_baseline}
+BENCHMARK: CPT {cpt_code} avg = ${benchmark_amount}
+
+Output JSON:
+{
+  "risk_score": 0-100,
+  "reasoning_steps": [
+    { "step": 1, "title": "...", "detail": "...", "evidence": "key=val · key=val" }
+  ],
+  "verdict": "APPROVE | REVIEW | HOLD_PAYMENT | ESCALATE",
+  "fraud_probability": 0.0-1.0
+}</pre>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const claims = [
+  {id:'CLM-2024-8841',provider:'Dr. Martinez',amount:'$18,400',icd:'Z00.00',risk:'high',score:87,flags:'Overbill, velocity'},
+  {id:'CLM-2024-8840',provider:'City Radiology',amount:'$3,200',icd:'M54.5',risk:'med',score:58,flags:'Duplicate suspected'},
+  {id:'CLM-2024-8839',provider:'St. Hope Hosp.',amount:'$940',icd:'J06.9',risk:'low',score:12,flags:'None'},
+  {id:'CLM-2024-8838',provider:'NPI 9876543',amount:'$7,100',icd:'F32.1',risk:'high',score:79,flags:'Network cluster'},
+  {id:'CLM-2024-8837',provider:'Westside Clinic',amount:'$210',icd:'Z23',risk:'low',score:8,flags:'None'},
+  {id:'CLM-2024-8836',provider:'Dr. Patel',amount:'$4,500',icd:'E11.65',risk:'med',score:44,flags:'Upcoding signal'},
+  {id:'CLM-2024-8835',provider:'FastMed Inc.',amount:'$22,000',icd:'Z00.01',risk:'high',score:93,flags:'Overbill, ghost'},
+  {id:'CLM-2024-8834',provider:'Lakeview Lab',amount:'$380',icd:'Z13.6',risk:'low',score:19,flags:'None'},
+];
+
+function riskBadge(r,s){
+  const cls = r==='high'?'risk-high':r==='med'?'risk-med':'risk-low';
+  const col = r==='high'?'#ef4444':r==='med'?'#f59e0b':'#10b981';
+  return `<span class="risk ${cls}">${s}</span>`;
+}
+
+function scoreBar(s){
+  const col = s>70?'#ef4444':s>40?'#f59e0b':'#10b981';
+  return `<div class="score-bar"><div class="score-fill" style="width:${s}%;background:${col}"></div></div>`;
+}
+
+function renderClaims(){
+  const tbody = document.getElementById('claimsBody');
+  tbody.innerHTML = claims.map((c,i)=>`
+    <tr class="claim-row${i===0?' selected':''}" onclick="selectClaim(this)">
+      <td class="mono" style="color:var(--amber);font-size:11px;">${c.id}</td>
+      <td>${c.provider}</td>
+      <td class="mono">${c.amount}</td>
+      <td class="mono" style="color:var(--muted);font-size:11px;">${c.icd}</td>
+      <td>${riskBadge(c.risk,c.score)}</td>
+      <td>${scoreBar(c.score)}</td>
+      <td style="color:var(--muted);font-size:11px;">${c.flags}</td>
+    </tr>
+  `).join('');
+}
+
+function selectClaim(row){
+  document.querySelectorAll('.claim-row').forEach(r=>r.classList.remove('selected'));
+  row.classList.add('selected');
+  showTab('claim');
+}
+
+function renderMinichart(){
+  const bars = [28,35,42,38,55,67,44,51,48,72,89,61].map((v,i)=>{
+    const cls = v>70?'hot':v>50?'med':'';
+    return `<div class="minichart-bar ${cls}" style="height:${v/89*100}%"></div>`;
+  }).join('');
+  document.getElementById('minichart').innerHTML = bars;
+}
+
+function showTab(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  const tabs = {dashboard:0,claim:1,features:2,roadmap:3,arch:4};
+  document.querySelectorAll('.nav-tab')[tabs[tab]].classList.add('active');
+}
+
+let claimsCount = 2847;
+function animateStats(){
+  setInterval(()=>{
+    claimsCount += Math.floor(Math.random()*3);
+    document.getElementById('claimsToday').textContent = claimsCount.toLocaleString();
+  }, 3000);
+}
+
+renderClaims();
+renderMinichart();
+animateStats();
+</script>
+</body>
+</html>
