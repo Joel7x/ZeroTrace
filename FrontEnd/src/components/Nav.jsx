@@ -6,6 +6,8 @@ const Nav = ({ activeTab, setActiveTab }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'claim', label: 'Claim Inspector', icon: FileSearch },
     { id: 'features', label: 'Features', icon: Sparkles },
+    { id: 'roadmap', label: 'Build Roadmap', icon: Map },
+    { id: 'arch', label: 'Architecture', icon: Network },
   ];
 
   return (
@@ -24,7 +26,11 @@ const Nav = ({ activeTab, setActiveTab }) => {
             }`}
           >
             {isActive && <div className="absolute inset-0 bg-gradient-to-t from-amber/10 to-transparent pointer-events-none"></div>}
-            <Icon size={14} className={isActive ? 'text-amber' : 'text-white/40 group-hover:text-white/60'} />
+            {Icon ? (
+              <Icon size={14} className={isActive ? 'text-amber' : 'text-white/40 group-hover:text-white/60'} />
+            ) : (
+              <div className="w-[14px] h-[14px] bg-white/20 rounded-full" />
+            )}
             <span className="relative z-10">{tab.label}</span>
           </button>
         );
