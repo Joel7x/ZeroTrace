@@ -1,0 +1,36 @@
+# Python standard ignored files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Data files (Very large CSVs from Kaggle insurance dataset)
+# Ignoring these avoids Github 100MB upload limits
+ml-pipeline/ml_pipeline/data/*.csv
+
+# Trained binary models (joblib files are large binaries)
+ml-pipeline/ml_pipeline/models/*.joblib
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE / Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS temporary files
+Thumbs.db
+Ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
