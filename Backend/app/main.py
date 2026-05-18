@@ -10,16 +10,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Create Database Tables (In production, use Alembic for migrations)
+# Base.metadata.create_all(bind=engine)
+
+# Configure CORS for M3/M4 Frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000"], # React default ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Register Routers
 app.include_router(routes_claims.router, prefix="/api/v1", tags=["Claims"])
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "ml_model_loaded": ml_engine.model is not None}
+    return {"status": "healthy", "ml_model_loaded": ml_engine.predictor is not None}

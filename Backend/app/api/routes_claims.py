@@ -1,26 +1,44 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List
+
+# Assuming you have a database dependency injected here
+# from app.core.database import get_db
+from app.models.schema import Claim, Provider
 from app.services.ml_services import ml_engine
 
 router = APIRouter()
 
-MOCK_CLAIMS = [
-    {"id":"CLM-2024-8841","provider":"Dr. Martinez","amount":"₹18,400","icd":"Z00.00","risk":"high","score":87,"flags":"Overbill, velocity"},
-    {"id":"CLM-2024-8840","provider":"City Radiology","amount":"₹3,200","icd":"M54.5","risk":"med","score":58,"flags":"Duplicate suspected"},
-    {"id":"CLM-2024-8839","provider":"St. Hope Hosp.","amount":"₹940","icd":"J06.9","risk":"low","score":12,"flags":"None"},
-    {"id":"CLM-2024-8838","provider":"NPI 9876543","amount":"₹7,100","icd":"F32.1","risk":"high","score":79,"flags":"Network cluster"},
-    {"id":"CLM-2024-8837","provider":"Westside Clinic","amount":"₹210","icd":"Z23","risk":"low","score":8,"flags":"None"},
-    {"id":"CLM-2024-8836","provider":"Dr. Patel","amount":"₹4,500","icd":"E11.65","risk":"med","score":44,"flags":"Upcoding signal"},
-    {"id":"CLM-2024-8835","provider":"FastMed Inc.","amount":"₹22,000","icd":"Z00.01","risk":"high","score":93,"flags":"Overbill, ghost"},
-    {"id":"CLM-2024-8834","provider":"Lakeview Lab","amount":"₹380","icd":"Z13.6","risk":"low","score":19,"flags":"None"},
-]
+# Mock DB dependency for demonstration
+def get_db(): pass 
 
 @router.get("/claims", response_model=list)
-def get_all_claims(limit: int = 100):
-    return MOCK_CLAIMS[:limit]
+def get_all_claims(limit: int = 100, db: Session = Depends(get_db)):
+    """Fetch claims to populate the M3 React Table."""
+    claims = db.query(Claim).limit(limit).all()
+    return claims
+
+@router.get("/providers/{provider_id}/risk")
+def get_provider_risk(provider_id: str, db: Session = Depends(get_db)):
+    """Fetch a specific provider and their aggregated risk score."""
+    provider = db.query(Provider).filter(Provider.provider_id == provider_id).first()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    return {
+        "provider_id": provider.provider_id,
+        "risk_score": provider.calculated_risk_score,
+        "is_flagged": provider.calculated_risk_score > 80
+    }
 
 @router.post("/claims/analyze")
 def analyze_new_claim(claim_payload: dict):
+    """
+    Live inference endpoint. Accepts synthetic claim data, 
+    runs it through M1's Isolation Forest, and returns the score.
+    """
     risk_score = ml_engine.calculate_risk_score(claim_payload)
+    
     return {
         "status": "success",
         "risk_score": risk_score,
