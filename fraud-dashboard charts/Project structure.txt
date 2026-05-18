@@ -1,0 +1,46 @@
+healthcare-fraud-detection/
+├── .github/                   # M5: GitHub Actions for CI/CD pipelines
+├── .gitignore                 # Standard git ignores (node_modules, venv, .env, etc.)
+├── docker-compose.yml         # M5: Spins up Postgres, FastAPI, and React locally
+├── README.md                  # M5: Main documentation, setup instructions, demo script
+│
+├── ml_pipeline/               # 🔵 M1: ML Engineer Workspace
+│   ├── data/                  # Raw Kaggle CSVs (ignored in Git) and processed samples
+│   ├── notebooks/             # Jupyter notebooks for EDA and model prototyping
+│   ├── src/                   
+│   │   ├── preprocess.py      # Feature engineering and data cleaning
+│   │   ├── train.py           # Isolation Forest training script
+│   │   └── evaluate.py        # Model validation against Kaggle labels
+│   ├── models/                # Saved model artifacts (e.g., model.joblib, scaler.joblib)
+│   └── requirements.txt       # pandas, scikit-learn, joblib
+│
+├── backend/                   # 🟡 M2: Backend Lead (FastAPI)
+│   ├── app/
+│   │   ├── api/               # REST endpoints (e.g., routes_claims.py, routes_providers.py)
+│   │   ├── core/              # App config, environment variables, DB connection string
+│   │   ├── models/            # SQLAlchemy database schemas
+│   │   ├── services/          # Business logic & ML inference (loading the joblib file)
+│   │   └── main.py            # FastAPI entry point
+│   ├── scripts/
+│   │   └── seed_data.py       # Script to load Kaggle data into PostgreSQL
+│   ├── tests/                 # M5: API integration tests
+│   ├── requirements.txt       # fastapi, uvicorn, sqlalchemy, psycopg2
+│   └── Dockerfile             # M5: Backend container definition
+│
+└── frontend/                  # 🟢 M3 & 🔴 M4: Frontend Leads (React)
+    ├── public/                # Static assets
+    ├── src/
+    │   ├── assets/            # Images, icons, global CSS
+    │   ├── components/        # Shared UI (RiskBadges, Buttons, DetailModals)
+    │   ├── features/          # Domain-specific modules
+    │   │   ├── dashboard/     # M4: Summary stat cards, Recharts/Chart.js graphs
+    │   │   ├── claims/        # M3: Claims table, search, filter logic
+    │   │   └── audit/         # M4: Audit trail timeline view
+    │   ├── services/          # Axios configurations and API calls to FastAPI
+    │   ├── utils/             # Helper functions (e.g., formatting dates, currencies)
+    │   ├── App.jsx            # Main React router and layout
+    │   └── main.jsx           # React entry point
+    ├── package.json           # React, Tailwind, Axios, Recharts/Chart.js
+    ├── tailwind.config.js     # Tailwind design system configuration
+    ├── vite.config.js         # Build tooling (assuming Vite)
+    └── Dockerfile             # M5: Frontend container definition
